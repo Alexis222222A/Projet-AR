@@ -2,38 +2,347 @@
 <html>
 
 <head>
-  <title>My first ar experience </title>
-	<script src="https://aframe.io/releases/1.3.0/aframe.min.js">
-	</script>
-	<script src="https://raw.githack.com/AR-js-org/AR.js/3.4.5/aframe/build/aframe-ar.js">
+  <script src="https://aframe.io/releases/1.3.0/aframe.min.js">
 
-	</script>
+  </script>
+  <script src="https://raw.githack.com/AR-js-org/AR.js/3.4.5/aframe/build/aframe-ar.js">
+
+  </script>
+
+  <script defer>
+    AFRAME.registerComponent("audio", {
+      init: function () {
+        this.trackedElements = document.querySelectorAll(
+          "a-marker[audio]"
+        );
+      },
+      tick: function () {
+        this.trackedElements.forEach((marker) => {
+       
+          const sound = document.querySelector(
+            marker.attributes.audioReference.value
+          );
+          if (marker.object3D.visible) {
+           
+            if (sound.paused) {
+              sound.play();
+            }
+          } else {
+        
+            if (!sound.paused) {
+              sound.pause();
+              sound.currentTime = 0;
+            }
+          }
+        });
+      },
+    });
+  </script>
+
+<script defer>
+  // https://github.com/nikolaiwarner/aframe-chromakey-material
+  AFRAME.registerShader('chromakey', {
+    schema: {
+      src: {type: 'map'},
+      color: {default: {x: 0.0, y: 1.0, z: 0.0}, type: 'vec3', is: 'uniform'},
+      chroma: {type: 'bool', is: 'uniform'},
+      transparent: {default: true, is: 'uniform'}
+    },
+
+    init: function (data) {
+
+      const videoEl = data.src;
+
+      document.addEventListener('click', () => {
+        videoEl.play();
+        const entity = document.querySelector("[sound]");
+        if (entity) entity.components.sound.playSound();
+        this.el.children[0].setAttribute('visible', false)
+      });
+
+      var videoTexture = new THREE.VideoTexture(data.src)
+      videoTexture.minFilter = THREE.LinearFilter
+      this.material = new THREE.ShaderMaterial({
+        uniforms: {
+          chroma: {
+            type: 'b',
+            value: data.chroma
+          },
+          color: {
+            type: 'c',
+            value: data.color
+          },
+          myTexture: {
+            type: 't',
+            value: videoTexture
+          }
+        },
+        vertexShader:
+          `
+          varying vec2 vUv;
+          
+          void main(void)
+          {
+            vUv = uv;
+            vec4 mvPosition = modelViewMatrix * vec4( position, 1.0 );
+            gl_Position = projectionMatrix * mvPosition;
+          }
+        `
+        ,
+        fragmentShader:
+          `
+            uniform sampler2D myTexture;
+            uniform vec3 color;
+            uniform bool chroma;
+            varying vec2 vUv;
+            
+            void main(void)
+            {
+              vec3 tColor = texture2D( myTexture, vUv ).rgb;
+              float a;
+              if(chroma == true){
+                 a = (length(tColor - color) - 0.5) * 7.0;
+              }
+              else {
+                a = 1.0;
+              }
+              
+              gl_FragColor = vec4(tColor, a);
+            }
+          `
+      })
+    },
+
+    update: function (data) {
+      this.material.color = data.color
+      this.material.src = data.src
+      this.material.transparent = data.transparent
+    },
+  });
+</script>
+
+<script defer>
+  AFRAME.registerComponent("audiohandler", {
+    init: function () {
+      this.trackedElements = document.querySelectorAll(
+        "a-marker[audiohandler]"
+      );
+      //this.hasplayed = false
+      console.log(this.trackedElements);
+    },
+    tick: function () {
+      this.trackedElements.forEach((marker) => {
+       const vid = document.querySelector(
+          marker.attributes.vidReference.value
+        );
+       const sound = document.querySelector(
+          marker.attributes.audioReference.value
+        );
+        //console.log(vid, sound)
+        if (marker.object3D.visible) {
+          if (vid && vid.paused) {
+            vid.play();
+          }
+          if (sound && sound.paused) {
+            sound.play();
+           
+          }
+          
+        } else {
+         
+          if (vid && !vid.paused) {
+            vid.pause();
+            vid.currentTime = 0;
+          }
+          if (sound && !sound.paused) {
+            //sound.pause();
+            //sound.currentTime = 0;
+          }
+        }
+      });
+    },
+  });
+
+</script>
 </head>
 
 
 <body style="margin : 0px; overflow: hidden;">
 
-	<a-scene 
-    embedded arjs="sourceType: webcam;"
-    vr-mode-ui="enabled: false" 
-    renderer="sortObjects: true; antialias: true; logarithmicDepthBuffer: true;"
-    arjs="trackingMethod: best;
-    detectionMode :'color_and_matrix' 
-    changeMatrixMode: 'modelViewMatrix'; "
-	  smooth="true" smoothCount="5" smoothTolerance=".05" smoothThreshold="5" 
-    sourceWidth= "800" sourceHeight= "600"
-    displayWidth= "1280" displayHeight="720" >
+  <a-scene embedded
+    arjs="sourceType: webcam; detectionMode: mono_and_matrix; matrixCodeType: 3x3; trackingMethod: best ; changeMatrixMode: modelViewMatrix; labelingMode:black_region;"
+    vr-mode-ui="enabled: false"
+    renderer="sortObjects: true; antialias: true; colorManagement: true; physicallyCorrectLights; logarithmicDepthBuffer: true;"
+    smooth=" true" smoothCount="5" smoothTolerance=".05" smoothThreshold="5" sourceWidth="800" sourceHeight="600"
+    displayWidth="1920" displayHeight="1080">
 
-		<a-marker preset="kanji" size= "0.08">
+    <a-assets>
+      <img id="M01" src="1 ecran.png">
+      <img id="m00" src="./assets/img01.png">
+      <img id="m01" src="./assets/img02.jpg">
+      <img id="m02" src="./assets/1886.png">
+      <img id="m03" src="./assets/atlanta.jpg">
+      <img id="m04" src="./assets/laboratoire.png">
+      <img id="m05" src="./assets/universal_remedy.png">
+      <img id="m06" src="./assets/pharmacie.jpg">
+      <img id="m07" src="./assets/FASTFOOD.png">
+      <img id="m08" src="./assets/perenoel.png">
+      <img id="m09" src="./assets/pemberton2.png">
+      <img id="m10" src="./assets/bouteille_ancienne.png">
+      <img id="m11" src="./assets/aplat_rouge.png">
+      <img id="m12" src="./assets/noix de cola_.png">
+      <img id="m13" src="./assets/5CENTS.png">
+      <img id="m14" src="./assets/billets.jpg">
+      <img id="m15" src="./assets/dollar2.jpg">
+      <img id="m16" src="./assets/John_Pemberton.jpg">
+      <img id="m17" src="./assets/FRANKMASON-R.png">
+      <img id="m18" src="./assets/Guerre-Secession.jpeg">
+      <img id="m19" src="./assets/seringue-morphine.png">
+      <img id="m20" src="./assets/pot-morphine.png">
+      <img id="m21" src="./assets/VinToniqueMariani.png">
+      <img id="m22" src="./assets/Ancienne affiche coca_.png">
+      <img id="m23" src="./assets/Feuille cola 1.png">
+      <img id="m24" src="./assets/Feuille de cola 2.png">
+      <img id="m25" src="./assets/Feuille de cola 3.png">
+      <img id="m26" src="./assets/Feuille de cola 4.png">
+      <img id="m27" src="./assets/1- CANETTEv.png">
+      <img id="m28" src="./assets/2- cocacouleur.png">
+      <img id="m29" src="./assets/2- FONDNOIR.png">
+      <img id="m30" src="./assets/1- BROSES.png">
+      <img id="m31" src="./assets/M54.png">
+      <img id="m32" src="./assets/2- FONDBROSE.png">
+      <img id="m33" src="./assets/1- BOUTEILLEPINK.png">
+      <img id="m34" src="./assets/2-BULLESROSE.png">
+      <img id="m35" src="./assets/1-CANETTEVERTE.png">
+      <img id="m36" src="./assets/1- canettecolor.png">
+      <img id="m37" src="./assets/2- fondv_.png">
+      <img id="m38" src="./assets/1- COCABLEU.png">
+      <img id="m39" src="./assets/2-MAINVIOLET.png">
+      <img id="m40" src="./assets/3- FOND ROUGEpng.png">
+      <img id="m41" src="./assets/1- MAINROSE.png">
+      <img id="m42" src="./assets/2-CANETTENOIR.png">
+      <img id="m43" src="./assets/3- FONDTURQUOISE.png">
+      <img id="m44" src="./assets/1-canettejaune.png">
+      <img id="m45" src="./assets/2-mainrose.png">
+      <img id="m46" src="./assets/3-bouches.png">
+      <img id="m47" src="./assets/4-fondturqoise.png">
+      <img id="m48" src="./assets/1- bouleàfacette.png">
+      <img id="m49" src="./assets/2-photocanette.png">
+      <img id="m50" src="./assets/3- fondorange.png">
+      <img id="m51" src="./assets/1-statue.png">
+      <img id="m52" src="./assets/2-Marilynmonroe.png">
+      <img id="m53" src="./assets/1-canettesroses.png">
+      <img id="m54" src="./assets/2-carreauxnoir.png">
+      <img id="m55" src="./assets/1-CAPROSE.png">
+      <img id="m56" src="./assets/2-CAPJAUNE.png">
+      <img id="m57" src="./assets/3-CAPBLEUE.png">$
+      <img id="m58" src="./assets/1-rosetransparent.png">
+      <img id="m59" src="./assets/2-bouteillecarreau.png">
+      <img id="m60" src="./assets/3- bleutransparent.png">
+      <img id="m61" src="./assets/1- CAPSULEVERT.png">
+      <img id="m62" src="./assets/2- FONDROSE.png">
+      <img id="m63" src="./assets/1- CANETTEJAUNE.png">
+      <img id="m64" src="./assets/2- FONDVIOLET.png">
+      <img id="m65" src="./assets/1- johnpmontage.png">
+      <img id="m66" src="./assets/2- fondjohnp.png">
+      <img id="m67" src="./assets/Lol.png">
+      <img id="m68" src="./assets/Lol30.png">
+      <img id="m69" src="./assets/Lol60.png">
+      <img id="m70" src="./assets/Lol42.png">
+      <img id="m71" src="./assets/Lol45.png">
+      <img id="m72" src="./assets/debut1.png">
+      <img id="m73" src="./assets/debut2.png">
+      <img id="m74" src="./assets/debut3.png">
+      <img id="m75" src="./assets/1- bouteillebleu.png">
+      <img id="m76" src="./assets/2-plongeon.png">
+      <img id="m77" src="./assets/1- paquerettes.png">
+      <img id="m78" src="./assets/2- bleujohn.png">
+      <img id="m79" src="./assets/1- hautparleur.png">
+      <img id="m80" src="./assets/2- fondvioletpng.png">
+      <img id="m81" src="./assets/1- logococa.png">
+      <img id="m82" src="./assets/2- boucherose.png">
+      <img id="m83" src="./assets/1-canetterosept.png">
+      <img id="m84" src="./assets/2- mainjr.png">
+      <img id="m85" src="./assets/1- capsuleverte.png">
+      <img id="m86" src="./assets/2-traitsrr.png">
+      <img id="m87" src="./assets/1-bouteillesjaune.png">
+      <img id="m88" src="./assets/2-carreauxrouges.png">
+      <img id="m89" src="./assets/anciennephoto2.png">
+      <img id="m90" src="./assets/anciennephoto.png">
+      <img id="m91" src="./assets/statue-john.png">
+      <img id="m92" src="./assets/statue-john-2.png">
+      <img id="m93" src="./assets/pinup.png">
+      <img id="m94" src="./assets/guerre-coca.png">
+      <img id="m95" src="./assets/1- banane.png">
+      <img id="m96" src="./assets/2-Fondbleu.png">
+      <img id="m97" src="./assets/CAPSULE 1.png">
+      <img id="m98" src="./assets/CAPSULE 2.png">
+      <img id="m99" src="./assets/1- boulerose.png">
+      <img id="m100" src="./assets/2- brose.png">
+      <img id="m101" src="./assets/BOUTEILLE 1.png">
+      <img id="m102" src="./assets/BOUTEILLE 2.png">
+      <img id="m103" src="./assets/machine 1.png">
+      <img id="m104" src="./assets/machine 2.png">
+      <img id="m105" src="./assets/pere noel 1.png">
+      <img id="m106" src="./assets/pere noel 2.png">
+     
+     
+     
+     
 
-			<a-box position='0 0 0' rotation='0 0 0' scale='1 1 1' color='#FD5D3B' material='opacity: 1;'></a-box>
 
-		</a-marker>
+      
+    
+     
+     
 
-		<a-camera position="0 0 0" look-controls="enabled: false"></a-camera>
 
-	</a-scene>
 
-</body>
+      <video id="vid1" src="./assets/VIDEO 2.mp4" autoplay="true" loop="false" preload="auto" controls="true"
+        muted="true" playsinline="" webkit-playsinline=""></video>
+      <video id="vid2" src="./assets/VIDEO 1-13.mp4" autoplay="true" loop="false" preload="auto" controls="true"
+        muted="true" playsinline="" webkit-playsinline=""></video>
+      <video id="vid3" src="./assets/63 VIDEO.mp4" autoplay="true" loop="false" preload="auto" controls="true"
+        muted="true" playsinline="" webkit-playsinline=""></video>
+      <audio id="sound1" src="./assets/SON2.mp3" preload="auto" loop="false"></audio>
+      <audio id="sound2" src="./assets/AUDIO1-13.mp3" preload="auto" loop="false"></audio>
+      <audio id="sound3" src="./assets/M63 AUDIO.mp3" preload="auto" loop="false"></audio>
+    </a-assets> 
 
-</html>
+    <a-marker type="barcode" value="0" size="1.5">
+      <a-image src="#m01" rotation="90 0 0" position="0 2 0" width="2" height="2"></a-image>
+      <a-image src="#m01" rotation="90 0 0" position="0 0 0" width="2" height="2"></a-image>
+
+
+      <!--
+      <a-box color="#143F6B" depth="1" height="1" width="1"></a-box>
+      <a-text value="Marker 0" side="double" position="0 1.1 0" rotation="270 0 0" align="center"></a-text>
+      -->
+    </a-marker>
+
+    <a-marker type="barcode" value="1" size="0.5">
+		<a-image src="#M01" rotation="90 180 0" position="0 0 0" width="1" height="1"></a-image>
+	  </a-marker>
+
+    <a-marker type="barcode" value="2" size="0.5">
+      <a-image src="#m76" rotation="270 180 0" position="0 0 0" width="1" height="1"></a-image>
+      <a-image src="#m75" rotation="270 180 0" position="0 0.5 0" width="1" height="1"></a-image>
+    </a-marker>
+
+
+    <a-marker type="barcode" value="3" size="0.5">
+      <a-image src="#m47" rotation="270 -90 0" position="0 0 0" width="1" height="1.2"></a-image>
+      <a-image src="#m46" rotation="270 -90 0" position="0 0.25 0" width="1" height="1.2"></a-image>
+      <a-image src="#m45" rotation="270 -90 0" position="0 0.5 0" width="1" height="1.2"></a-image>
+      <a-image src="#m44" rotation="270 -90 0" position="0 0.75 0" width="1" height="1.2"></a-image>    
+    </a-marker>
+
+    <a-marker type="barcode" value="4" size="0.5">
+      <a-image src="#m91" rotation="90 180 0" position="0 0 0" width="1" height="1"></a-image>
+      <a-image src="#m92" rotation="90 180 0" position="0 0.25 0" width="1" height="1"></a-image>
+    </a-marker>
+
+
+    <a-marker type="barcode" value="5" size="0.5">
+      <a-image src="#m03" rotation="90 90 0" position="0 0 0" width="1.77" height="1"></a-image>
+    </a-marker>
