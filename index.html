@@ -9,6 +9,8 @@
 
   </script>
 
+  
+
   <script defer>
     AFRAME.registerComponent("audio", {
       init: function () {
@@ -217,7 +219,7 @@
         muted="true" playsinline="" webkit-playsinline=""></video>
       <video id="vid3" src="./assets/63 VIDEO.mp4" autoplay="true" loop="false" preload="auto" controls="true"
         muted="true" playsinline="" webkit-playsinline=""></video>
-      <audio id="sound1" src="./assets/SON2.mp3" preload="auto" loop="false"></audio>
+      <audio id="sound1" src="./image/1 1 1 voix annonce .MP3" preload="auto" loop="false"></audio>
       <audio id="sound2" src="./assets/AUDIO1-13.mp3" preload="auto" loop="false"></audio>
       <audio id="sound3" src="./assets/M63 AUDIO.mp3" preload="auto" loop="false"></audio>
     </a-assets> 
@@ -226,7 +228,7 @@
       <a-image src="#m07" rotation="270 00 00" position="0 0 0" width="1" height="1"></a-image>
     </a-marker>
 
-    <a-marker type="barcode" value="13" size="5">
+    <a-marker audio audioReference="#sound1" type="barcode" value="13" size="5">
 		<a-image src="#m08" rotation="270 0 0" position="0 0 0" width="1" height="1"></a-image>
 	  </a-marker>
 
@@ -302,4 +304,16 @@
 
     <a-marker type="barcode" value="50" size="2">
       <a-image src="#m016" rotation="270 0 0" position="0 0 0" width="1" height="1"></a-image>
+    </a-marker>
+
+    <a-marker type="barcode" value="60" size="2">
+      <a-image src="#m016" rotation="270 0 0" position="0 0 0" width="1" height="1"></a-image>
+    </a-marker>
+
+    <a-marker type="barcode" value="49" size="2">
+      <a-image src="#m011" rotation="270 0 0" position="0 0 0" width="1" height="1"></a-image>
+    </a-marker>
+
+    <a-marker type="barcode" value="11" size="2">
+      <a-image src="#m011" rotation="270 0 0" position="0 0 0" width="1" height="1"></a-image>
     </a-marker>
